@@ -16,6 +16,7 @@ const config: ExpoConfig = {
   assetBundlePatterns: ['**/*'],
   ios: {
     supportsTablet: false,
+    usesAppleSignIn: true,
     bundleIdentifier: 'com.shawn10067.AuthAnalyticsDbDemo',
   },
   android: {
@@ -24,7 +25,7 @@ const config: ExpoConfig = {
       backgroundColor: '#ffffff',
     },
   },
-  plugins: [['expo-router']],
+  plugins: ['expo-apple-authentication', ['expo-router']],
   web: {
     favicon: './assets/favicon.png',
   },
