@@ -1,10 +1,10 @@
 import {useAuthStore} from '@/store/authStore';
 import {supabase} from '@/utils/supabase';
-import {OAuthResponse} from '@supabase/supabase-js';
+import {OAuthResponse, User} from '@supabase/supabase-js';
 import * as QueryParams from 'expo-auth-session/build/QueryParams';
 import {StatusBar} from 'expo-status-bar';
 import * as WebBrowser from 'expo-web-browser';
-import {useCallback, useEffect, useState} from 'react';
+import {SetStateAction, useCallback, useEffect, useState} from 'react';
 import * as Linking from 'expo-linking';
 import {makeRedirectUri} from 'expo-auth-session';
 
@@ -38,25 +38,57 @@ const createSessionFromUrl = async (url: string) => {
 };
 
 const performOAuthGoogle = async () => {
-  const {data, error} = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo,
-      skipBrowserRedirect: true,
-    },
-  });
-  if (error) throw error;
+  try {
+    const {data, error} = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo,
+        skipBrowserRedirect: true,
+      },
+    });
+    if (error) throw error;
 
-  console.log('data', data, redirectTo);
+    const res = await WebBrowser.openAuthSessionAsync(data?.url ?? '', redirectTo);
 
-  const res = await WebBrowser.openAuthSessionAsync(data?.url ?? '', redirectTo);
+    if (res.type === 'success') {
+      const {url} = res;
+      const session = await createSessionFromUrl(url);
 
-  if (res.type === 'success') {
-    console.log('success', res);
-    const {url} = res;
-    await createSessionFromUrl(url);
-  } else {
-    console.log('failed', res);
+      if (session) {
+        // Fetch user profile from Supabase DB
+        const {data: profileData, error: profileError} = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        console.log('Found profile:', profileData, session.user.id);
+
+        if (profileError) {
+          // If profile doesn't exist, create one
+          const {data: newProfile, error: createError} = await supabase
+            .from('profiles')
+            .insert([{email: session.user.email}])
+            .single();
+
+          if (createError) {
+            console.error('Error creating profile:', createError);
+            throw createError;
+          }
+
+          console.log('Created new profile:', newProfile);
+        }
+
+        // Set user state in your app
+        // setUser({
+        // email: session.user.email,
+        // });
+      }
+    } else {
+      console.log('OAuth login failed');
+    }
+  } catch (error) {
+    console.error('Error signing in with Google:', error);
   }
 };
 
@@ -66,21 +98,49 @@ const performOauthApple = async () => {
       requestedScopes: [AppleAuthenticationScope.FULL_NAME, AppleAuthenticationScope.EMAIL],
     });
     if (credential.identityToken) {
-      const {
-        error,
-        data: {user},
-      } = await supabase.auth.signInWithIdToken({
+      const {error, data} = await supabase.auth.signInWithIdToken({
         provider: 'apple',
         token: credential.identityToken,
       });
+
+      if (error) {
+        throw error;
+      }
+
+      // Fetch user profile from Supabase DB
+      const {data: profileData, error: profileError} = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profileError) {
+        const {data: newProfile, error: createError} = await supabase
+          .from('profiles')
+          .insert([{email: data.user.email}])
+          .single();
+
+        if (createError) {
+          throw createError;
+        }
+
+        console.log('Created new profile:', newProfile);
+      }
+
+      console.log('Found profile:', profileData, data.user.id);
+
+      // Set user state in your app
+      // setUser({
+      //   email: data.user.email,
+      // });
     } else {
       throw new Error('No identityToken.');
     }
-  } catch (e: any) {
-    if (e.code === 'ERR_REQUEST_CANCELED') {
+  } catch (error) {
+    if (error.code === 'ERR_REQUEST_CANCELED') {
       console.error('Apple Sign In Request Canceled');
     } else {
-      console.error(e);
+      console.error('Error signing in with Apple:', error);
     }
   }
 };
