@@ -1,17 +1,26 @@
 import {create} from 'zustand';
-
-type User = {
-  email: string;
-};
+import {Session, User} from '@supabase/supabase-js';
+import mixpanel from '@/utils/mixpanel';
+import {supabase} from '@/utils/supabase';
 
 type AuthStore = {
   user: User | null;
-  setUser: (user: User | null) => void;
-  logout: () => void;
+  logIn: (user: User) => void;
+  logOut: () => void;
 };
 
 export const useAuthStore = create<AuthStore>(set => ({
   user: null,
-  setUser: user => set({user}),
-  logout: () => set({user: null}),
+  logIn: async (user: User) => {
+    mixpanel.identify(user.id ?? '');
+    mixpanel.registerSuperProperties({
+      email: user.email ?? '',
+    });
+    set({user: user});
+  },
+  logOut: async () => {
+    await supabase.auth.signOut();
+    mixpanel.reset();
+    set({user: null});
+  },
 }));
