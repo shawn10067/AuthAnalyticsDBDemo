@@ -47,15 +47,14 @@ export default function App() {
   const onLayoutRootView = useCallback(async () => {
     if (appIsReady) {
       await SplashScreen.hideAsync();
+      if (user) {
+        router.replace('/user');
+      }
     }
   }, [appIsReady]);
 
   if (!appIsReady) {
     return null;
-  }
-
-  if (user) {
-    router.replace('/user');
   }
 
   return (

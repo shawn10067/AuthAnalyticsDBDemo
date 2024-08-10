@@ -3,7 +3,7 @@ import {useRouter} from 'expo-router';
 import {useState} from 'react';
 import {ActivityIndicator, Button, Text, View} from 'react-native';
 
-const WelcomeScreen = () => {
+const SnapScreen = () => {
   const [signingOut, setSigningOut] = useState(false);
   const router = useRouter();
   const user = useAuthStore(state => state.user);
@@ -17,23 +17,10 @@ const WelcomeScreen = () => {
         alignItems: 'center',
       }}
     >
-      <Text>Welcome, {user?.email}!</Text>
-      {signingOut ? (
-        <ActivityIndicator />
-      ) : (
-        <Button
-          title="Log out"
-          onPress={async () => {
-            setSigningOut(true);
-            await logOut();
-            router.navigate('/');
-            setSigningOut(false);
-          }}
-        />
-      )}
-      <Button title="Go to snap" onPress={() => router.navigate('/snap')} />
+      <Text>Welcome to the Snap Screen, {user?.email}!</Text>
+      <Button title="Go back" onPress={() => router.back()} />
     </View>
   );
 };
 
-export default WelcomeScreen;
+export default SnapScreen;
