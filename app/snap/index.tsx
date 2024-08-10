@@ -4,10 +4,8 @@ import {useState} from 'react';
 import {ActivityIndicator, Button, Text, View} from 'react-native';
 
 const SnapScreen = () => {
-  const [signingOut, setSigningOut] = useState(false);
   const router = useRouter();
   const user = useAuthStore(state => state.user);
-  const logOut = useAuthStore(state => state.logOut);
 
   return (
     <View
