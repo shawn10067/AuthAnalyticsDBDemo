@@ -2,7 +2,6 @@ import {useAuthStore} from '@/store/authStore';
 import {supabase} from '@/utils/supabase';
 import {StatusBar} from 'expo-status-bar';
 import {useCallback, useEffect, useState} from 'react';
-import * as Linking from 'expo-linking';
 import {makeRedirectUri} from 'expo-auth-session';
 import {Button, StyleSheet, Text, View} from 'react-native';
 import {
@@ -11,8 +10,7 @@ import {
   AppleAuthenticationButtonType,
 } from 'expo-apple-authentication';
 import {SplashScreen, useRouter} from 'expo-router';
-import mixpanel from '@/utils/mixpanel';
-import {createSessionFromUrl, performOauthApple, performOAuthGoogle} from '@/utils/auth';
+import {performOauthApple, performOAuthGoogle} from '@/utils/auth';
 
 const redirectTo = makeRedirectUri();
 
@@ -28,6 +26,9 @@ export default function App() {
   useEffect(() => {
     supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session && session.user) {
+        if (user) {
+          router.replace('/user');
+        }
         logIn(session.user);
       }
     });
