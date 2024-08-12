@@ -26,10 +26,12 @@ export default function App() {
   useEffect(() => {
     supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session && session.user) {
-        if (user) {
+        console.log('SIGNED_IN', session.user);
+        if (session.user) {
+          logIn(session.user);
+          console.log('User already logged in');
           router.replace('/user');
         }
-        logIn(session.user);
       }
     });
   }, []);

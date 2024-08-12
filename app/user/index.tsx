@@ -10,13 +10,21 @@ const WelcomeScreen = () => {
   const logOut = useAuthStore(state => state.logOut);
 
   return (
-    <View className="bg-slate-800 flex-1 justify-center items-center">
-      <Text className="text-orange-300 text-2xl">Welcome, {user?.email}!</Text>
+    <View className="bg-slate-800 flex-1 justify-center items-center p-12">
+      <Text className="text-orange-300 text-center m-4 mb-8 text-2xl">Welcome, {user?.email}</Text>
+      <Pressable
+        className="h-12 items-center justify-center p-4 bg-slate-600 rounded-md active:bg-blue-400 w-48 m-4"
+        onPress={async () => {
+          router.push('/snap');
+        }}
+      >
+        <Text className="text-orange-300">Go to snap 👻</Text>
+      </Pressable>
       {signingOut ? (
         <ActivityIndicator />
       ) : (
         <Pressable
-          className="h-12 items-center justify-center p-4 bg-slate-600 rounded-md active:bg-blue-400"
+          className="h-12 items-center justify-center p-4 bg-slate-600 rounded-md active:bg-blue-400 w-48 m-4"
           onPress={async () => {
             setSigningOut(true);
             await logOut();
@@ -27,7 +35,6 @@ const WelcomeScreen = () => {
           <Text className="text-orange-300">Sign out</Text>
         </Pressable>
       )}
-      <Button title="Go to snap!" onPress={() => router.navigate('/snap')} />
     </View>
   );
 };
