@@ -59,8 +59,6 @@ export const performOAuthGoogle = async (redirectTo: string) => {
           console.log('Created new profile:', newProfile);
         }
       }
-    } else {
-      console.log('OAuth login failed');
     }
   } catch (error) {
     console.error('Error signing in with Google:', error);

@@ -1,5 +1,4 @@
 import {Stack} from 'expo-router';
-import SnapScreen from '.';
 
 export default function DefaultLayout() {
   return (
@@ -12,9 +11,16 @@ export default function DefaultLayout() {
       }}
     >
       <Stack.Screen
-        name="index"
+        name="(tabs)"
         options={{
-          title: 'Snap',
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="onboarding"
+        options={{
+          headerShown: false,
+          headerTitle: 'Snap',
         }}
       />
     </Stack>

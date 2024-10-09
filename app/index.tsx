@@ -26,11 +26,9 @@ export default function App() {
   useEffect(() => {
     supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session && session.user) {
-        console.log('SIGNED_IN', session.user);
         if (session.user) {
           logIn(session.user);
-          console.log('User already logged in');
-          router.replace('/user');
+          router.replace('/snap');
         }
       }
     });
@@ -51,7 +49,7 @@ export default function App() {
     if (appIsReady) {
       await SplashScreen.hideAsync();
       if (user) {
-        router.replace('/user');
+        router.replace('/snap');
       }
     }
   }, [appIsReady]);
