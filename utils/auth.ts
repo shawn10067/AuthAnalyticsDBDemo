@@ -46,6 +46,7 @@ export const performOAuthGoogle = async (redirectTo: string) => {
         console.log('Found profile:', profileData, session.user.id);
 
         if (profileError) {
+          console.error('Error fetching profile:', profileError);
           const {data: newProfile, error: createError} = await supabase
             .from('profiles')
             .insert([{email: session.user.email}])
