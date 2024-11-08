@@ -7,11 +7,12 @@ import {BarcodeScanningResult, CameraView} from 'expo-camera';
 import * as WebBrowser from 'expo-web-browser';
 import {useRef, useState} from 'react';
 import {CameraTools} from '@/components/CameraTools';
+import {supabase} from '@/utils/supabase';
+import * as FileSystem from 'expo-file-system';
 
 const HomeScreen = () => {
   const router = useRouter();
   const user = useAuthStore(state => state.user);
-  const {clearFirstTime} = useFirstTimeOpen();
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [cameraFacing, setCameraFacing] = useState<'front' | 'back'>('back');
   const [torchEnabled, setTorchEnabled] = useState(false);
@@ -34,21 +35,108 @@ const HomeScreen = () => {
     }
   };
 
+  // define a function to get all the files from a folder from s3 using the user's id
+  const getFiles = async () => {
+    const userId = user?.id;
+
+    if (!userId) {
+      return;
+    }
+
+    const {data, error} = await supabase.storage.from('user-token-images').list(userId);
+
+    if (error) {
+      console.error('Error getting files:', error);
+      return;
+    }
+
+    console.log('Files:', data);
+
+    const signedUrls = await Promise.all(
+      data.map(async file => {
+        const {name} = file;
+        const {data, error: signedUrlError} = await supabase.storage
+          .from('user-token-images')
+          .createSignedUrl(name, 60);
+
+        if (signedUrlError) {
+          console.error('Error creating signed URL:', signedUrlError);
+          return;
+        }
+
+        return data?.signedUrl;
+      })
+    );
+
+    console.log('Signed URLs:', signedUrls);
+  };
+
   const handleTakePicture = async () => {
     const photo = await cameraRef.current?.takePictureAsync({
       quality: 0.5,
       exif: true,
     });
     if (photo) {
-      console.log('Photo taken:', photo);
-      console.log('Photo size:', photo.exif);
       setPhoto(photo.uri);
+
+      const response = await fetch(photo.uri);
+      const blob = await response.blob();
+      const arrayBuffer = await new Response(blob).arrayBuffer();
+      const fileName = `public/${Date.now()}.jpg`;
+
+      const userId = user?.id;
+
+      if (!userId) {
+        return;
+      }
+
+      // Check if there is a folder for the user, if not create one
+      const {data: folderData, error: folderError} = await supabase.storage
+        .from('user-token-images')
+        .list(userId);
+
+      if (folderError) {
+        console.error('Error checking folder:', folderError);
+        return;
+      }
+
+      if (folderData.length === 0) {
+        console.log('Creating folder for user:', userId);
+        const {error: createFolderError} = await supabase.storage.from('user-token-images').upload(
+          `public/${userId}/.emptyFolderPlaceholder`,
+          new Blob(
+            [
+              JSON.stringify({
+                userId,
+                email: user?.email || '',
+              }),
+            ],
+            {type: 'text/plain'}
+          )
+        );
+
+        if (createFolderError) {
+          console.error('Error creating folder:', createFolderError);
+          return;
+        }
+      }
+
+      const {error} = await supabase.storage
+        .from('user-token-images')
+        .upload(`public/${userId}/${fileName}`, arrayBuffer, {contentType: 'image/jpeg'});
+      if (error) {
+        console.error('Error uploading image: ', error);
+      }
+
+      // const windows = await supabase.storage
+      //   .from('user-token-images')
+      //   .download(`wallpapers/og_windows.jpg`);
+      // console.log('Windows:', windows);
     }
   };
 
   const renderCameraView = () => {
     if (photo) {
-      console.log('Photo', photo);
       return (
         <View className="flex-1 justify-center items-center flex">
           <Text className="text-white">Photo taken:</Text>
