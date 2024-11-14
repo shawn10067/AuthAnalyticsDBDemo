@@ -1,5 +1,5 @@
 import {create} from 'zustand';
-import {Session, User} from '@supabase/supabase-js';
+import {User} from '@supabase/supabase-js';
 import mixpanel from '@/utils/mixpanel';
 import {supabase} from '@/utils/supabase';
 
@@ -16,6 +16,7 @@ export const useAuthStore = create<AuthStore>(set => ({
     mixpanel.registerSuperProperties({
       email: user.email ?? '',
     });
+
     set({user: user});
   },
   logOut: async () => {

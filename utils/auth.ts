@@ -2,6 +2,7 @@ import {supabase} from '@/utils/supabase';
 import * as QueryParams from 'expo-auth-session/build/QueryParams';
 import * as WebBrowser from 'expo-web-browser';
 import {AppleAuthenticationScope, signInAsync} from 'expo-apple-authentication';
+// import minifaker from 'minifaker';
 
 export const createSessionFromUrl = async (url: string) => {
   const {params, errorCode} = QueryParams.getQueryParams(url);
@@ -19,6 +20,24 @@ export const createSessionFromUrl = async (url: string) => {
   return data.session;
 };
 
+export const addNewProfile = async (email: string) => {
+  const {data, error} = await supabase
+    .from('profiles')
+    .insert([{email, name: 'sheen'}])
+    .single();
+
+  if (error) {
+    console.error('Error creating profile:', error);
+  }
+  return data;
+};
+
+export const fetchProfile = async (id: string) => {
+  console.log('Fetching profile:', id);
+  const {data, error} = await supabase.from('profiles').select('*').eq('id', id).single();
+  return {data, error};
+};
+
 export const performOAuthGoogle = async (redirectTo: string) => {
   try {
     const {data, error} = await supabase.auth.signInWithOAuth({
@@ -28,6 +47,7 @@ export const performOAuthGoogle = async (redirectTo: string) => {
         skipBrowserRedirect: true,
       },
     });
+
     if (error) throw error;
 
     const res = await WebBrowser.openAuthSessionAsync(data?.url ?? '', redirectTo);
@@ -37,27 +57,10 @@ export const performOAuthGoogle = async (redirectTo: string) => {
       const session = await createSessionFromUrl(url);
 
       if (session) {
-        const {data: profileData, error: profileError} = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        console.log('Found profile:', profileData, session.user.id);
-
+        const {data: profileData, error: profileError} = await fetchProfile(session.user.id);
         if (profileError) {
-          console.error('Error fetching profile:', profileError);
-          const {data: newProfile, error: createError} = await supabase
-            .from('profiles')
-            .insert([{email: session.user.email}])
-            .single();
-
-          if (createError) {
-            console.error('Error creating profile:', createError);
-            throw createError;
-          }
-
-          console.log('Created new profile:', newProfile);
+          const newProfile = await addNewProfile(session.user.email);
+          console.log('Created new profile');
         }
       }
     }
@@ -72,32 +75,15 @@ export const performOauthApple = async () => {
       requestedScopes: [AppleAuthenticationScope.FULL_NAME, AppleAuthenticationScope.EMAIL],
     });
     if (credential.identityToken) {
-      const {error, data} = await supabase.auth.signInWithIdToken({
+      const {data: appleData} = await supabase.auth.signInWithIdToken({
         provider: 'apple',
         token: credential.identityToken,
       });
-
-      if (error) {
-        throw error;
-      }
-
-      const {data: profileData, error: profileError} = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', data.user.id)
-        .single();
-
+      const data = appleData?.session;
+      const {data: profileData, error: profileError} = await fetchProfile(data.user.id);
       if (profileError) {
-        const {data: newProfile, error: createError} = await supabase
-          .from('profiles')
-          .insert([{email: data.user.email}])
-          .single();
-
-        if (createError) {
-          throw createError;
-        }
-
-        console.log('Created new profile:', newProfile);
+        const newProfile = await addNewProfile(data.user.email);
+        console.log('Created new profile');
       }
 
       console.log('Found profile:', profileData, data.user.id);
