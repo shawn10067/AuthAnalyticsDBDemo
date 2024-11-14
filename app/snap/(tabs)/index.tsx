@@ -9,10 +9,12 @@ import {useRef, useState} from 'react';
 import {CameraTools} from '@/components/CameraTools';
 import {supabase} from '@/utils/supabase';
 import * as FileSystem from 'expo-file-system';
+import {useProfileStore} from '@/store/profileStore';
 
 const HomeScreen = () => {
   const router = useRouter();
   const user = useAuthStore(state => state.user);
+  const getPictures = useProfileStore(state => state.getPictures);
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [cameraFacing, setCameraFacing] = useState<'front' | 'back'>('back');
   const [torchEnabled, setTorchEnabled] = useState(false);
@@ -77,41 +79,8 @@ const HomeScreen = () => {
         Alert.alert('Error', 'An unexpected error occurred. Please try again.');
       }
     }
-  };
 
-  // Modified getFiles function to match the new structure
-  const getFiles = async () => {
-    const userId = user?.id;
-    if (!userId) return;
-
-    try {
-      const {data, error} = await supabase.storage.from('user-token-images').list(userId); // List files in the user's folder
-
-      if (error) {
-        console.error('Error getting files:', error);
-        return;
-      }
-
-      const signedUrls = await Promise.all(
-        data.map(async file => {
-          const filePath = `${userId}/${file.name}`;
-          const {data: urlData, error: signedUrlError} = await supabase.storage
-            .from('user-token-images')
-            .createSignedUrl(filePath, 60);
-
-          if (signedUrlError) {
-            console.error('Error creating signed URL:', signedUrlError);
-            return null;
-          }
-
-          return urlData?.signedUrl;
-        })
-      );
-
-      console.log('Signed URLs:', signedUrls.filter(Boolean));
-    } catch (error) {
-      console.error('Error in getFiles:', error);
-    }
+    getPictures();
   };
 
   const renderCameraView = () => {
