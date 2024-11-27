@@ -1,5 +1,5 @@
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import {View} from 'react-native';
+import { View } from "react-native";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 export const CameraTools = ({
   cameraFacing,
@@ -9,29 +9,34 @@ export const CameraTools = ({
   setTorchEnabled,
   setFlashMode,
 }: {
-  cameraFacing: 'front' | 'back';
+  cameraFacing: "front" | "back";
   torchEnabled: boolean;
-  flashMode: 'on' | 'off';
-  setCameraFacing: React.Dispatch<React.SetStateAction<'front' | 'back'>>;
+  flashMode: "on" | "off";
+  setCameraFacing: React.Dispatch<React.SetStateAction<"front" | "back">>;
   setTorchEnabled: React.Dispatch<React.SetStateAction<boolean>>;
-  setFlashMode: React.Dispatch<React.SetStateAction<'on' | 'off'>>;
+  setFlashMode: React.Dispatch<React.SetStateAction<"on" | "off">>;
 }) => {
   return (
-    <View className="flex-1 justify-evenly flex flex-row items-end">
+    <View className="flex flex-1 flex-row items-end justify-evenly">
+      {/* @ts-expect-error: Expo types are weird */}
       <FontAwesome.Button
         name="camera"
-        onPress={() => setCameraFacing(cameraFacing === 'back' ? 'front' : 'back')}
-        className="bg-slate-600 w-18 justify-center"
+        onPress={() =>
+          setCameraFacing(cameraFacing === "back" ? "front" : "back")
+        }
+        className="w-18 justify-center bg-slate-600"
       />
+      {/* @ts-expect-error: Expo types are weird */}
       <FontAwesome.Button
         name="flash"
-        onPress={() => setFlashMode(flashMode === 'off' ? 'on' : 'off')}
-        className="bg-slate-600 w-18 justify-center"
+        onPress={() => setFlashMode(flashMode === "off" ? "on" : "off")}
+        className="w-18 justify-center bg-slate-600"
       />
+      {/* @ts-expect-error: Expo types are weird */}
       <FontAwesome.Button
         name="lightbulb-o"
         onPress={() => setTorchEnabled(!torchEnabled)}
-        className="bg-slate-600 w-18 justify-center"
+        className="w-18 justify-center bg-slate-600"
       />
     </View>
   );

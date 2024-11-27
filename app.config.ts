@@ -1,10 +1,10 @@
 import {ExpoConfig} from 'expo/config';
 
 const config: ExpoConfig = {
-  name: 'AuthAnalyticsDbDemo',
-  slug: 'AuthAnalyticsDbDemo',
-  scheme: 'com.AuthAnalyticsDbDemo',
-  version: '1.0.0',
+  name: 'moments',
+  slug: 'moments',
+  scheme: 'com.moments',
+  version: '0.0.1',
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'light',
@@ -17,7 +17,7 @@ const config: ExpoConfig = {
   ios: {
     supportsTablet: false,
     usesAppleSignIn: true,
-    bundleIdentifier: 'com.shawn10067.AuthAnalyticsDbDemo',
+    bundleIdentifier: 'com.shawn10067.moments',
   },
   android: {
     adaptiveIcon: {
@@ -31,16 +31,16 @@ const config: ExpoConfig = {
     [
       'expo-media-library',
       {
-        photosPermission: 'Allow AuthAnalyticsDB to access your photos.',
-        savePhotosPermission: 'Allow AuthAnalyticsDB to save photos.',
+        photosPermission: 'Allow Moments to access your photos.',
+        savePhotosPermission: 'Allow Moments to save photos.',
         isAccessMediaLocationEnabled: true,
       },
     ],
     [
       'expo-camera',
       {
-        cameraPermission: 'Allow AuthAnalyticsDB to access your camera',
-        microphonePermission: 'Allow AuthAnalyticsDB to access your microphone',
+        cameraPermission: 'Allow Moments to access your camera',
+        microphonePermission: 'Allow Moments to access your microphone',
         recordAudioAndroid: true,
       },
     ],

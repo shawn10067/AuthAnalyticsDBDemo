@@ -11,6 +11,9 @@ web-build/
 # native build folders
 ios/
 
+# sketch folder
+sketch/
+
 # Native
 *.orig.*
 *.jks

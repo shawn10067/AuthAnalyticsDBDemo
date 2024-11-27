@@ -1,25 +1,25 @@
-import {ActionButton} from '@/components/Button';
-import {useFirstTimeOpen} from '@/hooks/useFirstTimeOpen';
-import {useAuthStore} from '@/store/authStore';
-import {useRouter} from 'expo-router';
-import {ActivityIndicator, Alert, Button, Image, Text, View} from 'react-native';
-import {BarcodeScanningResult, CameraView} from 'expo-camera';
-import * as WebBrowser from 'expo-web-browser';
+import type {BarcodeScanningResult} from 'expo-camera';
 import {useRef, useState} from 'react';
-import {CameraTools} from '@/components/CameraTools';
-import {supabase} from '@/utils/supabase';
-import * as FileSystem from 'expo-file-system';
-import {useProfileStore} from '@/store/profileStore';
+import {Alert, Image, Text, View} from 'react-native';
+import {CameraView} from 'expo-camera';
+import * as WebBrowser from 'expo-web-browser';
+
+import {ActionButton} from '~/components/Button';
+import {CameraTools} from '~/components/CameraTools';
+import {useAuthStore} from '~/store/authStore';
+import {useProfileStore} from '~/store/profileStore';
+import {supabase} from '~/utils/supabase';
 
 const HomeScreen = () => {
-  const router = useRouter();
   const user = useAuthStore(state => state.user);
-  const getPictures = useProfileStore(state => state.getPictures);
+  const fetchPictures = useProfileStore(state => state.fetchPictures);
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [cameraFacing, setCameraFacing] = useState<'front' | 'back'>('back');
   const [torchEnabled, setTorchEnabled] = useState(false);
   const [photo, setPhoto] = useState<string | null>(null);
   const [flashMode, setFlashMode] = useState<'on' | 'off'>('off');
+
+  const profileState = useProfileStore();
 
   const cameraRef = useRef<CameraView>(null);
   const timeoutRef = useRef<NodeJS.Timeout>();
@@ -55,11 +55,9 @@ const HomeScreen = () => {
         return;
       }
 
-      // Create a timestamp-based filename for the image
       const imageFileName = `${userId}/${Date.now()}.jpg`;
 
       try {
-        // Upload the image directly - Supabase will create the folder structure automatically
         const {error: uploadError} = await supabase.storage
           .from('user-token-images')
           .upload(imageFileName, arrayBuffer, {
@@ -80,16 +78,16 @@ const HomeScreen = () => {
       }
     }
 
-    getPictures();
+    void fetchPictures();
   };
 
   const renderCameraView = () => {
     if (photo) {
       return (
-        <View className="flex-1 justify-center items-center flex">
+        <View className="flex flex-1 items-center justify-center">
           <Text className="text-white">Photo taken:</Text>
-          <View className="w-96 h-96 rounded-3xl overflow-hidden">
-            <Image source={{uri: photo}} className="w-full h-full" />
+          <View className="h-96 w-96 overflow-hidden rounded-3xl">
+            <Image source={{uri: photo}} className="h-full w-full" />
           </View>
           <ActionButton text="Retake" onPress={() => setPhoto(null)} />
         </View>
@@ -99,7 +97,7 @@ const HomeScreen = () => {
     return (
       <CameraView
         ref={cameraRef}
-        className="w-96 h-96 rounded-3xl overflow-hidden"
+        className="h-96 w-96 overflow-hidden rounded-3xl"
         barcodeScannerSettings={{
           barcodeTypes: ['qr'],
         }}
@@ -123,7 +121,7 @@ const HomeScreen = () => {
   };
 
   return (
-    <View className="bg-slate-800 flex-1 justify-center items-center flex">
+    <View className="flex flex-1 items-center justify-center bg-slate-800">
       {renderCameraView()}
       <Text className="text-white">Welcome to the main feed</Text>
       <Text className="text-white">{user?.email}</Text>
@@ -131,7 +129,7 @@ const HomeScreen = () => {
         <ActionButton
           text="QR Code detected ->"
           onPress={() => {
-            WebBrowser.openBrowserAsync(qrCode, {
+            void WebBrowser.openBrowserAsync(qrCode, {
               presentationStyle: WebBrowser.WebBrowserPresentationStyle.FORM_SHEET,
             });
             setTimeout(() => {
@@ -141,6 +139,12 @@ const HomeScreen = () => {
         />
       )}
       <ActionButton text="Take Picture" onPress={handleTakePicture} />
+      <ActionButton
+        text="Log current profile"
+        onPress={() => {
+          console.log(profileState.profile);
+        }}
+      />
     </View>
   );
 };

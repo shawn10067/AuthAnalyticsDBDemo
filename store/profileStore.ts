@@ -1,20 +1,21 @@
 import {create} from 'zustand';
-import {useAuthStore} from './authStore';
-import {supabase} from '@/utils/supabase';
-import {fetchProfile} from '@/utils/auth';
 
-interface UserProfile {
+import {fetchProfile} from '~/utils/auth';
+import {supabase} from '~/utils/supabase';
+import {useAuthStore} from './authStore';
+
+export interface UserProfile {
   id: string;
   name: string;
   email: string;
 }
 
-interface ProfileStore {
+export interface ProfileStore {
   profile: UserProfile | null;
   pictures: string[];
   setProfile: (profile: UserProfile) => void;
   clearProfile: () => void;
-  getPictures: () => void;
+  fetchPictures: () => Promise<void>;
 }
 
 export const useProfileStore = create<ProfileStore>(set => ({
@@ -22,7 +23,7 @@ export const useProfileStore = create<ProfileStore>(set => ({
   pictures: [],
   setProfile: profile => set({profile}),
   clearProfile: () => set({profile: null, pictures: []}),
-  getPictures: async () => {
+  fetchPictures: async () => {
     const {data, error} = await supabase.storage
       .from('user-token-images')
       .list(useAuthStore.getState().user?.id ?? '');
@@ -43,25 +44,27 @@ export const useProfileStore = create<ProfileStore>(set => ({
           return null;
         }
 
-        return urlData?.signedUrl;
+        return urlData.signedUrl;
       })
     );
 
-    set({pictures: signedUrls.filter(Boolean)});
+    set({pictures: signedUrls.filter(Boolean) as string[]});
   },
 }));
 
-useAuthStore.subscribe(async (prevAuthStore, newAuthStore) => {
-  if (newAuthStore.user === null) {
-    useProfileStore.getState().clearProfile();
-  } else {
-    const {data, error} = await fetchProfile(newAuthStore.user.id);
-    if (error) {
-      console.error('Error fetching profile:', error);
-    }
+useAuthStore.subscribe((newAuthStore, prevAuthStore) => {
+  void (async () => {
+    if (newAuthStore.user === null && prevAuthStore.user !== null) {
+      useProfileStore.getState().clearProfile();
+    } else {
+      const {data, error} = await fetchProfile(newAuthStore.user?.id ?? '');
+      if (error) {
+        console.error('Error fetching profile:', error);
+      }
 
-    if (data) {
-      useProfileStore.getState().setProfile(data);
+      if (data) {
+        useProfileStore.getState().setProfile(data);
+      }
     }
-  }
+  })();
 });

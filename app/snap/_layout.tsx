@@ -1,12 +1,12 @@
-import {Stack} from 'expo-router';
+import { Stack } from "expo-router";
 
 export default function DefaultLayout() {
   return (
     <Stack
       screenOptions={{
-        headerTintColor: 'orange',
+        headerTintColor: "orange",
         headerStyle: {
-          backgroundColor: '#020617',
+          backgroundColor: "#020617",
         },
       }}
     >
@@ -20,7 +20,7 @@ export default function DefaultLayout() {
         name="onboarding"
         options={{
           headerShown: false,
-          headerTitle: 'Snap',
+          headerTitle: "Snap",
         }}
       />
     </Stack>

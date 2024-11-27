@@ -1,5 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useEffect, useState} from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const useFirstTimeOpen = () => {
   const [isFirstTime, setIsFirstTime] = useState(false);
@@ -14,7 +14,7 @@ export const useFirstTimeOpen = () => {
   };
 
   useEffect(() => {
-    (async () => {
+    void (async () => {
       try {
         setIsLoading(true);
         const isFirstTimeOpen = await AsyncStorage.getItem('hasOpened');

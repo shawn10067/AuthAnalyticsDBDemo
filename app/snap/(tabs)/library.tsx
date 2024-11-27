@@ -1,25 +1,26 @@
-import {useProfileStore} from '@/store/profileStore';
-import React, {useEffect} from 'react';
-import {View, Text, StyleSheet, Image, Dimensions} from 'react-native';
-import {FlashList} from '@shopify/flash-list';
+import React, { useEffect } from "react";
+import { ActivityIndicator, Image, StyleSheet, Text, View } from "react-native";
+import { FlashList } from "@shopify/flash-list";
+
+import { useProfileStore } from "~/store/profileStore";
 
 const LibraryScreen = () => {
-  const {getPictures, pictures} = useProfileStore();
+  const { fetchPictures, pictures } = useProfileStore();
 
   const [loading, setLoading] = React.useState(true);
 
   useEffect(() => {
-    (async () => {
+    void (async () => {
       setLoading(true);
-      getPictures();
+      await fetchPictures();
       setLoading(false);
     })();
-  }, []);
+  }, [fetchPictures]);
 
   if (loading) {
     return (
       <View style={styles.container}>
-        <Text style={styles.text}>Waiting...</Text>
+        <ActivityIndicator size="large" color="#0000ff" />
       </View>
     );
   }
@@ -33,13 +34,17 @@ const LibraryScreen = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <View className="my-16 h-screen w-screen px-8">
       <FlashList
         data={pictures}
         keyExtractor={(item, index) => index.toString()}
-        renderItem={({item}) => <Image source={{uri: item}} style={{width: '100%', height: 400}} />}
+        renderItem={({ item }) => (
+          <Image
+            source={{ uri: item }}
+            style={{ width: "100%", height: 400 }}
+          />
+        )}
         estimatedItemSize={100}
-        // horizontal={true}
       />
     </View>
   );
@@ -47,14 +52,13 @@ const LibraryScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
-    width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height,
-    padding: 16,
-    paddingTop: 32,
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   text: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
 

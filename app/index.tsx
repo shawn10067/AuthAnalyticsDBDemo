@@ -1,20 +1,22 @@
-import {useAuthStore} from '@/store/authStore';
-import {supabase} from '@/utils/supabase';
-import {StatusBar} from 'expo-status-bar';
 import {useCallback, useEffect, useState} from 'react';
-import {makeRedirectUri} from 'expo-auth-session';
 import {Button, StyleSheet, Text, View} from 'react-native';
 import {
   AppleAuthenticationButton,
   AppleAuthenticationButtonStyle,
   AppleAuthenticationButtonType,
 } from 'expo-apple-authentication';
+import {makeRedirectUri} from 'expo-auth-session';
 import {SplashScreen, useRouter} from 'expo-router';
-import {performOauthApple, performOAuthGoogle} from '@/utils/auth';
+import {StatusBar} from 'expo-status-bar';
+
+import {useAuthStore} from '~/store/authStore';
+// import { useProfileStore } from "~/store/profileStore";
+import {performOauthApple, performOAuthGoogle} from '~/utils/auth';
+import {supabase} from '~/utils/supabase';
 
 const redirectTo = makeRedirectUri();
 
-SplashScreen.preventAutoHideAsync();
+void SplashScreen.preventAutoHideAsync();
 
 export default function App() {
   const user = useAuthStore(state => state.user);
@@ -25,17 +27,15 @@ export default function App() {
 
   useEffect(() => {
     supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session && session.user) {
-        if (session.user) {
-          logIn(session.user);
-          router.replace('/snap');
-        }
+      if (event === 'SIGNED_IN' && session) {
+        logIn(session.user);
+        router.replace('/snap');
       }
     });
   }, []);
 
   useEffect(() => {
-    (async () => {
+    void (async () => {
       setAppIsReady(false);
       const user = await supabase.auth.getUser();
       if (user.data.user) {
@@ -43,7 +43,7 @@ export default function App() {
       }
       setAppIsReady(true);
     })();
-  }, []);
+  }, [logIn]);
 
   const onLayoutRootView = useCallback(async () => {
     if (appIsReady) {
@@ -52,7 +52,7 @@ export default function App() {
         router.replace('/snap');
       }
     }
-  }, [appIsReady]);
+  }, [appIsReady, router, user]);
 
   if (!appIsReady) {
     return null;

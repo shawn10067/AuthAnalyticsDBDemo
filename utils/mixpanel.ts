@@ -1,7 +1,7 @@
 //Import Mixpanel API
 import {Mixpanel} from 'mixpanel-react-native';
 
-const mixpanelToken = process.env.MIXPANEL_TOKEN ?? '';
+const mixpanelToken = process.env['MIXPANEL_TOKEN'] ?? '';
 
 // Set up an instance of Mixpanel
 const trackAutomaticEvents = false;
